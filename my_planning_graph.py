@@ -34,14 +34,11 @@ class ActionLayer(BaseActionLayer):
         layers.ActionNode
         """
         # TODO: implement this function
-        neg_preconditions_A = [p for p in actionA.preconditions if p.op == '~']
-        neg_preconditions_B = [p for p in actionB.preconditions if p.op == '~']
-        
         for effectB in actionB.effects:
-            if effectB in neg_preconditions_A:
+            if ~effectB in actionA.preconditions:
                 return True
         for effectA in actionA.effects:
-            if effectA in neg_preconditions_B:
+            if ~effectA in actionB.preconditions:
                 return True
         return False
 
@@ -69,13 +66,19 @@ class LiteralLayer(BaseLiteralLayer):
         --------
         layers.BaseLayer.parent_layer
         """
-        # TODO: implement this function
-        raise NotImplementedError
+        actionsA = self.parents[literalA]
+        actionsB = self.parents[literalB]
+        is_inconsistent = True
+        for actionA in actionsA:
+            for actionB in actionsB:
+                if not self.parent_layer.is_mutex(actionA, actionB):
+                    is_inconsistent = False
+        return is_inconsistent
 
     def _negation(self, literalA, literalB):
         """ Return True if two literals are negations of each other """
         # TODO: implement this function
-        if literalA != literalB:
+        if literalA == ~literalB:
             return True
         return False
 
@@ -135,8 +138,18 @@ class PlanningGraph:
         --------
         Russell-Norvig 10.3.1 (3rd Edition)
         """
-        # TODO: implement this function
-        raise NotImplementedError
+        # for goal in self.goal:
+        self.fill()
+        goal_cost = {}
+        for i,layer in enumerate(self.literal_layers):
+            for goal in self.goal:
+                if goal not in goal_cost.keys() and goal in layer:
+                    goal_cost[goal] = i
+        cost =0
+        for key,val in goal_cost.items():
+            cost+=val
+
+        return cost
 
     def h_maxlevel(self):
         """ Calculate the max level heuristic for the planning graph
