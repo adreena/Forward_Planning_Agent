@@ -173,8 +173,17 @@ class PlanningGraph:
         -----
         WARNING: you should expect long runtimes using this heuristic with A*
         """
-        # TODO: implement maxlevel heuristic
-        raise NotImplementedError
+        self.fill()
+        goal_cost = {}
+        for i,layer in enumerate(self.literal_layers):
+            for goal in self.goal:
+                if goal not in goal_cost.keys() and goal in layer:
+                    goal_cost[goal] = i
+        max_cost = 0
+        for key,val in goal_cost.items():
+            if max_cost< val:
+                max_cost = val
+        return max_cost
 
     def h_setlevel(self):
         """ Calculate the set level heuristic for the planning graph
@@ -194,7 +203,23 @@ class PlanningGraph:
         WARNING: you should expect long runtimes using this heuristic on complex problems
         """
         # TODO: implement setlevel heuristic
-        raise NotImplementedError
+        self.fill()
+        goal_cost = {}
+        for i,layer in enumerate(self.literal_layers):
+            all_goals_met = True
+            for goal in self.goal:
+                if goal not in layer:
+                    all_goals_met = False
+            if not all_goals_met:
+                continue
+
+            goals_are_mutex = False
+            for goalA in self.goal:
+                for goalB in self.goal:
+                    if layer.is_mutex(goalA, goalB):
+                        goals_are_mutex = True
+            if not goals_are_mutex:
+                return i
 
     ##############################################################################
     #                     DO NOT MODIFY CODE BELOW THIS LINE                     #
